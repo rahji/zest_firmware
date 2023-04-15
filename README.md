@@ -1,6 +1,6 @@
 # Zest Shield Firmware
 
-This is software for an Arduino Uno (with the [Zest Shield](https://github.com/rahji/zestshield)) used to convert an Epilog Zing laser cutter/engraver to a machine for exposing cyanotype prints with an off-the-shelf UV laser. The goal of the project is to share all the electronic and mechanical designs, software, and documentation needed to reproduce this transformation from a proprietary mostly-obsolete machine ("dead media" device, cf [Bruce Sterling](http://www.deadmedia.org/)) to an open source device for creation ("zombie media" device, cf [Garnet Hertz and Jussi Parikka](https://www.researchgate.net/publication/273062231_Five_Principles_of_Zombie_Media)).
+This is software for an Arduino Uno (with the [Zest Shield](https://github.com/rahji/zestshield)) used to convert an Epilog Zing laser cutter/engraver to a machine for exposing cyanotype prints with an off-the-shelf UV laser. The goal of the project is to share all the electronic and mechanical designs, software, and documentation needed to reproduce this transformation from a proprietary defunct media device to an open source system for experimental mark making.
 
 ## What Does it Do?
 
@@ -15,3 +15,9 @@ The Zing has a red laser diode that helps with positioning the material in the m
 The power of the UV laser during this "on" time is set using an 8-position DIP switch on the Zest Shield. The 8-bit value set on the DIP switch is the value that will be sent to the laser driver, where 0 is no power and 255 is full power. **The value of the DIP switch is only checked when the Arduino is being powered on or when it is reset.**
 
 *Note that this system does not work with power values that are close to zero, so some experimentation may be necessary to get extremely dim laser output.*
+
+## Links
+
+* [Five Principles of Zombie Media](https://www.researchgate.net/publication/273062231_Five_Principles_of_Zombie_Media)
+* [2023 R-CADE Symposium: Repair](https://rcade.camden.rutgers.edu/2023symposium.html)
+* [REBOOT Laboratory](https://cfa.fsu.edu/special-projects/reboot/)
