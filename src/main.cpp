@@ -1,11 +1,9 @@
 /*
- * a simple program that mirrors pulses from an input pin to
- * an output pin - but only if they are at least 53us long.
- * a side-effect is that any mirrored pulses start 53us after
- * the input pulse starts.
+ * firmware for the zestshield project
+ * see also https://github.com/rahji/50us_filter
  * 
  * See included GPL v3 license
- * March 19, 2023 Rob Duarte github.com/rahji
+ * April 15, 2023 Rob Duarte github.com/rahji
  */
 
 #include <avr/io.h>
