@@ -1,71 +1,84 @@
 /*
- * firmware for the zestshield project
+ * Firmware for the Zest project
+ *
+ * This firmware is for the ATTINY85 microcontroller
+ * It takes an input square wave and mirrors it on the output,
+ * minus any pulses that are <53us or so.
+ * A side effect of this filtering is that all output pulses
+ * begin 53us after the corresponding input pulse (i.e.: they are 53us shorter).
+ *
  * see also https://github.com/rahji/50us_filter
- * 
+ *
  * See included GPL v3 license
- * April 15, 2023 Rob Duarte github.com/rahji
+ * August 11, 2023 Rob Duarte github.com/rahji
  */
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/sleep.h>
 
-#define INPUT_PIN 2
-#define OUTPUT_PIN 3
-#define MIN_PULSE_WIDTH 53
+// ATTINY85 pinout
+// Pin 2 (PB3) is the LED pin
+// Pin 3 (PB4) is the output pin
+// Pin 7 (PB2) is the input pin (INT0)
+
+#define INPUT_PIN PB2
+#define OUTPUT_PIN PB4
+#define LED_PIN PB3
 
 // When the input pin changes, this interrupt is triggered
 ISR(INT0_vect)
 {
-  // if this is a rising edge, start the 53us timer
-  if (PIND & (1 << INPUT_PIN)) // input pin is high
-  {
-    TCCR1B |= (1 << CS10); // start timer with no prescaler
-  } else {
-    // it's a falling edge, so mirror this end-of-pulse on the output pin
-    PORTD &= ~(1 << OUTPUT_PIN);
-  }
+    // if this is a rising edge, start the 53us timer
+    if (PINB & (1 << INPUT_PIN)) // input pin is high
+    {
+        TCCR1 |= (1 << CS10); // start timer with no prescaler
+    }
+    else
+    {
+        // it's a falling edge, so mirror this end-of-pulse on the output pin and the LED pin
+        PORTB &= ~((1 << OUTPUT_PIN) | (1 << LED_PIN));
+    }
 }
 
 // When the timer reaches 53us, this interrupt is triggered
 ISR(TIMER1_COMPA_vect)
 {
-  // if the input pin is still high that means it wasn't a <53us pulse
-  if (PIND & (1 << INPUT_PIN))
-  {
-    // so set the output pin high
-    PORTD |= (1 << OUTPUT_PIN);
-  }
+    // if the input pin is still high that means it wasn't a <53us pulse
+    if (PINB & (1 << INPUT_PIN))
+    {
+        // so set the output pin and LED pins high
+        PORTB |= (1 << OUTPUT_PIN) | (1 << LED_PIN);
+    }
 
-  // stop the timer. it will get restarted when the next pulse comes in
-  TCCR1B &= ~(1 << CS10);
+    // stop the timer. it will get restarted when the next pulse comes in
+    TCCR1 &= ~(1 << CS10);
 }
 
 int main()
 {
-  // Set the input and output pins
-  DDRD &= ~(1 << INPUT_PIN); // Set input pin as input
-  DDRD |= (1 << OUTPUT_PIN); // Set output pin as output
+    // Set the input and output pins
+    DDRB &= ~(1 << INPUT_PIN);                  // Set input pin as input
+    DDRB |= (1 << LED_PIN) | (1 << OUTPUT_PIN); // set LED_PIN and OUTPUT_PIN as output
 
-  // Set up timer 1 for a 53 microsecond period
-  TCCR1A = 0;
-  TCCR1B = (1 << WGM12); // CTC mode, no prescaler (timer/counter stopped)
-  OCR1A = 832-1; // 832 ticks / 16 MHz = 53 microseconds
-  TIMSK1 = (1 << OCIE1A); // Enable the timer interrupt
+    // Set up timer 1 for a 53 microsecond period
+    TCCR1 |= (1 << CTC1);  // CTC mode; timer stopped since CS10=0
+    OCR1A = 211 - 1;       // 210 ticks / 8 MHz = 52.5 microsecond period (I think)
+    TIMSK = (1 << OCIE1A); // Enable the timer compare match interrupt
 
-  // Enable the interrupt for the input pin
-  EICRA |= (1 << ISC00); // Set INT0 to trigger on any change
-  EIMSK |= (1 << INT0);  // Enable INT0 interrupt
+    // Enable the interrupt for the input pin
+    GIMSK |= (1 << PCIE);   // Enable pin change interrupts
+    PCMSK |= (1 << PCINT0); // Enable INT0 interrupt
 
-  // Enable global interrupts
-  sei();
+    // Enable global interrupts
+    sei();
 
-  // zzz (the interrupts take care of everything)
-	sleep_enable();					
-  while (1)
-  {
-    sleep_cpu();
-  }
+    // zzz (the interrupts take care of everything)
+    sleep_enable();
+    while (1)
+    {
+        sleep_cpu();
+    }
 
-  return 0; // never reached
+    return 0; // never reached
 }
