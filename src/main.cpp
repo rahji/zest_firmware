@@ -35,8 +35,8 @@ ISR(INT0_vect)
     }
     else
     {
-        // it's a falling edge, so mirror this end-of-pulse on the output pin and the LED pin
-        PORTB &= ~((1 << OUTPUT_PIN) | (1 << LED_PIN));
+        // it's a falling edge, so mirror this end-of-pulse on the output pin
+        PORTB &= ~(1 << OUTPUT_PIN);
     }
 }
 
@@ -46,8 +46,8 @@ ISR(TIMER0_COMPA_vect)
     // if the input pin is still high that means it wasn't a <53us pulse
     if (PINB & (1 << INPUT_PIN))
     {
-        // so set the output pin and LED pins high
-        PORTB |= (1 << OUTPUT_PIN) | (1 << LED_PIN);
+        // so set the output pin high
+        PORTB |= (1 << OUTPUT_PIN);
     }
 
     // stop the timer. it will get restarted when the next pulse comes in
@@ -58,7 +58,6 @@ int main()
 {
     // Set the input and output pins
     DDRB &= ~(1 << INPUT_PIN);                  // Set input pin as input
-    PORTB |= (1 << INPUT_PIN);                  // Set input pin pullup resistor
     DDRB |= (1 << LED_PIN) | (1 << OUTPUT_PIN); // set LED_PIN and OUTPUT_PIN as output
 
     // clear all the timer registers
@@ -78,6 +77,8 @@ int main()
 
     // Enable global interrupts
     sei();
+
+    PORTB |= (1 << LED_PIN);
 
     while (1)
     {
