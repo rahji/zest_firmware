@@ -42,7 +42,7 @@ ISR(INT0_vect)
 }
 
 // When the timer reaches 53us, this interrupt is triggered
-ISR(TIMER1_COMPA_vect)
+ISR(TIMER0_COMPA_vect)
 {
     // if the input pin is still high that means it wasn't a <53us pulse
     if (PINB & (1 << INPUT_PIN))
@@ -52,7 +52,7 @@ ISR(TIMER1_COMPA_vect)
     }
 
     // stop the timer. it will get restarted when the next pulse comes in
-    TCCR1 &= ~(1 << CS10);
+    TCCR0B &= ~(1 << CS01); // clearing the CS01 bit makes CS0[2:0] = 000, which stops the timer
 }
 
 int main()
@@ -61,10 +61,16 @@ int main()
     DDRB &= ~(1 << INPUT_PIN);                  // Set input pin as input
     DDRB |= (1 << LED_PIN) | (1 << OUTPUT_PIN); // set LED_PIN and OUTPUT_PIN as output
 
+    // clear all the timer registers
+    TCCR0A = 0;
+    TCCR0B = 0;
+    TCNT0 = 0;
+
     // Set up timer 1 for a 53 microsecond period
-    TCCR1 |= (1 << CTC1);  // CTC mode; timer stopped since CS10=0
-    OCR1A = 211 - 1;       // 210 ticks / 8 MHz = 52.5 microsecond period (I think)
-    TIMSK = (1 << OCIE1A); // Enable the timer compare match interrupt
+    OCR0A = 53 - 1; // 53 cycles = 53us since the clock is effectively 1MHz (8MHz/8 prescaler)
+    TCCR0A |= (1 << WGM01);  // CTC mode
+    TCCR0B |= (1 << CS01);   // prescaler = clock/8
+    TIMSK  |= (1 << OCIE1A); // Enable the timer compare match interrupt
 
     // Enable the interrupt for the input pin
     GIMSK |= (1 << PCIE);   // Enable pin change interrupts
